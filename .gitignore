@@ -1,0 +1,60 @@
+# Node
+**/node_modules/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+#**/package-lock.json
+# (optional) uncomment next line to ignore lockfiles across the repo
+# **/yarn.lock
+# **/pnpm-lock.yaml
+
+# Env & local config
+**/.env
+**/.env.*
+!.env.example
+
+# Build outputs
+**/dist/
+**/build/
+**/.cache/
+**/.vite/
+**/.parcel-cache/
+**/.turbo/
+**/.next/
+**/.nuxt/
+
+# Test & coverage
+**/coverage/
+**/.nyc_output/
+**/cypress/videos/
+**/cypress/screenshots/
+
+# Logs
+**/logs/
+*.log
+*.log.*
+log.txt
+
+# Editor / OS cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Lint/TS caches
+**/.eslintcache
+**/tsconfig.tsbuildinfo
+
+# Vite/React snapshots (if used)
+**/__snapshots__/
+
+# Uploaded assets (keep example file)
+backend/uploads/
+!backend/uploads/.gitkeep
+
+# Misc
+*.swp
+*.swo

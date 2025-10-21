@@ -1,13 +1,13 @@
-# MERN LMS Starter (No Docker)
+# LearnEase Pro LMS (No Docker)
 
-A minimal MERN starter for an LMS with:
+MERN for an LMS with:
 
 - Auth (JWT access token), roles (admin/faculty/learner)
 - Courses (list/get/create/update)
 - Enrollment request/approval
 - Feedback posting/listing
 - React SPA with protected routes
-- Cypress sample test
+- Cypress testing
 
 ## Quickstart
 
@@ -28,6 +28,7 @@ npm run dev
 
 ```
 cd ../frontend
+cp .env.example .env
 npm install
 npm i -D @vitejs/plugin-react
 echo "VITE_API_URL=http://localhost:5050/api/v1" > .env
