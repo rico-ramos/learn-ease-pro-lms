@@ -1,4 +1,4 @@
-# LearnEase Pro LMS (No Docker)
+# LearnEase Pro LMS
 
 MERN for an LMS with:
 
@@ -41,16 +41,7 @@ npm run dev
 ```
 cd ../cypress
 npm install
-npx cypress open
-```
-
-### --> Cypress (Frontend)
-
-```
-cd frontend
-npm run cy:open   # interactive mode
-# or
-npm run cy:run    # headless
+npx cypress open  or  npm run test:e2e
 ```
 
 Notes:

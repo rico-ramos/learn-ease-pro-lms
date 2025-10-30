@@ -29,6 +29,7 @@
 **/.nyc_output/
 **/cypress/videos/
 **/cypress/screenshots/
+**/cypress/downloads/
 
 # Logs
 **/logs/

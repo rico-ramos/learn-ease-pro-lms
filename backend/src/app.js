@@ -14,6 +14,7 @@ import lessonRoutes from './routes/lessons.routes.js'
 import progressRoutes from './routes/progress.routes.js'
 import userRoutes from './routes/users.routes.js'
 import uploadsRoutes from './routes/uploads.routes.js'
+import healthRoutes from './routes/health.routes.js'
 
 
 
@@ -50,8 +51,7 @@ app.use('/api/v1/lessons', lessonRoutes);
 app.use('/api/v1/progress', progressRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/uploads', uploadsRoutes)
-
-
+app.use('/api/v1/health', healthRoutes)
 
 // Centralized error handler
 // eslint-disable-next-line no-unused-vars

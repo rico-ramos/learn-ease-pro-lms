@@ -69,6 +69,20 @@ export const update = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+// DELETE /courses/:id  (faculty owner or admin)
+export const deleteCourse = async (req, res) => {
+  try {
+    const course = await Course.findByIdAndDelete(req.params.id)
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' })
+    }
+    res.json({ message: 'Course deleted successfully' })
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting course', error: err.message })
+  }
+}
+
+
 
 // GET /courses/mine  (faculty/admin)
 export const listMine = async (req, res, next) => {

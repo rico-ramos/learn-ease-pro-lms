@@ -37,12 +37,15 @@ export default function Login() {
       <form onSubmit={handleSubmit} className="space-y-3">
         <input
           className="w-full border px-3 py-2 rounded"
+          name="email"
+          type="email"
           value={email}
           onChange={e => setEmail(e.target.value)}
           placeholder="Email"
         />
         <input
           className="w-full border px-3 py-2 rounded"
+          name="password"
           type="password"
           value={password}
           onChange={e => setPassword(e.target.value)}
@@ -50,9 +53,9 @@ export default function Login() {
         />
         {error && <div className="text-red-600">{error}</div>}
         <button
+          type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-60"
-        >
+          className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-60">
           {loading ? 'Signing In…' : 'Sign In'}
         </button>
       </form>
