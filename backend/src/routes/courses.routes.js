@@ -13,7 +13,7 @@ r.get('/:slug', getOne);
 r.post('/', requireAuth, requireRole('faculty', 'admin'), create);
 r.patch('/:slug', requireAuth, requireRole('faculty', 'admin'), update);
 
-r.delete('/:id', requireAuth, requireRole(['faculty', 'admin']), deleteCourse)
+r.delete('/:id', requireAuth, requireRole('faculty', 'admin'), deleteCourse)
 
 
 export default r;
