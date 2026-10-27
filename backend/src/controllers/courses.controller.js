@@ -70,18 +70,19 @@ export const update = async (req, res, next) => {
 };
 
 // DELETE /courses/:id  (faculty owner or admin)
-export const deleteCourse = async (req, res) => {
+export const deleteCourse = async (req, res, next) => {
   try {
-    const course = await Course.findByIdAndDelete(req.params.id)
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' })
-    }
-    res.json({ message: 'Course deleted successfully' })
-  } catch (err) {
-    res.status(500).json({ message: 'Error deleting course', error: err.message })
-  }
-}
+    const course = await Course.findById(req.params.id);
+    if (!course) return res.status(404).json({ message: 'Course not found' });
 
+    const isOwner = course.createdBy.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+    if (!isOwner && !isAdmin) return res.status(403).json({ message: 'Forbidden' });
+
+    await course.deleteOne();
+    res.json({ message: 'Course deleted successfully' });
+  } catch (err) { next(err); }
+};
 
 
 // GET /courses/mine  (faculty/admin)
