@@ -33,6 +33,15 @@ export const approve = async (req, res, next) => {
     const enr = await Enrollment.findById(id);
     if (!enr) return res.status(404).json({ message: 'Not found' });
 
+    const course = await Course.findById(enr.course);
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+
+    const isOwner = course.createdBy.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
     enr.status = 'approved';
     enr.approvedBy = req.user.id;
     await enr.save();

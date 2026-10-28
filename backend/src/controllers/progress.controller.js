@@ -1,6 +1,7 @@
 import Course from '../models/Course.js'
 import Lesson from '../models/Lesson.js'
 import Progress from '../models/Progress.js'
+import Enrollment from '../models/Enrollment.js'
 
 // GET /progress/by-course/:slug  (auth)
 export const getByCourseSlug = async (req, res, next) => {
@@ -60,6 +61,13 @@ export const mark = async (req, res, next) => {
 
         const lesson = await Lesson.findById(lessonId).select('_id course')
         if (!lesson) return res.status(404).json({ message: 'Lesson not found' })
+
+        const enrollment = await Enrollment.findOne({
+            learner: req.user.id,
+            course: lesson.course,
+            status: 'approved'
+        })
+        if (!enrollment) return res.status(403).json({ message: 'Approved enrollment required' })
 
         const update = {}
         if (typeof completed === 'boolean') update.completed = completed
