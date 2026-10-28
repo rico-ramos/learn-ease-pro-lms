@@ -1,73 +1,100 @@
 describe('Course CRUD – Full Stack', () => {
-    const api = Cypress.env('apiUrl')
-    const timestamp = Date.now()
+    const api = Cypress.env('apiUrl');
+    const title = `E2E Test Course ${Date.now()}`;
     const courseData = {
-        title: `E2E Test Course ${timestamp}`,
+        title,
         description: 'End-to-end test course description',
         category: 'Automation',
         level: 'beginner'
-    }
+    };
+    let token;
+    let createdCourse;
+
+    const authHeaders = () => ({ Authorization: `Bearer ${token}` });
 
     before(() => {
-        cy.request('POST', `${Cypress.env('apiUrl')}/auth/login`, {
+        cy.request('POST', `${api}/auth/login`, {
             email: 'faculty@example.com',
             password: 'Secret123!'
-        }).then(res => {
-            expect(res.status).to.eq(200)
-            Cypress.env('token', res.body.accessToken)
-        })
-    })
+        }).then(({ status, body }) => {
+            expect(status).to.eq(200);
+            token = body.accessToken;
+            expect(token).to.be.a('string').and.not.be.empty;
+        });
+    });
 
+    // Clean up even if a later assertion fails (so reruns don't leave test data).
+    after(() => {
+        if (!createdCourse?._id || !token) return;
+        cy.request({
+            method: 'DELETE',
+            url: `${api}/courses/${createdCourse._id}`,
+            headers: authHeaders(),
+            failOnStatusCode: false
+        }).then(({ status }) => {
+            expect([200, 404]).to.include(status);
+        });
+    });
 
-
-    it('creates a new course via API (backend)', () => {
-        cy.log('Using token:', Cypress.env('token'))
+    it('creates and publishes a course via API', () => {
         cy.request({
             method: 'POST',
             url: `${api}/courses`,
-            headers: {
-                Authorization: `Bearer ${Cypress.env('token')}`
-            },
+            headers: authHeaders(),
             body: courseData
-        })
-            .its('status')
-            .should('eq', 201)
-    })
+        }).then(({ status, body }) => {
+            expect(status).to.eq(201);
+            expect(body._id).to.be.a('string');
+            expect(body.slug).to.be.a('string');
+            createdCourse = body;
 
-    it('verifies created course appears in frontend (UI)', () => {
-        cy.visit('/courses')
-        cy.contains(courseData.title, { timeout: 5000 }).should('be.visible')
-    })
+            // New courses are drafts; publish before asserting public visibility.
+            cy.request({
+                method: 'PATCH',
+                url: `${api}/courses/${createdCourse.slug}`,
+                headers: authHeaders(),
+                body: { isPublished: true }
+            }).then(({ status, body }) => {
+                expect(status).to.eq(200);
+                expect(body.isPublished).to.eq(true);
+            });
+        });
+    });
 
-    it('confirms update via backend', () => {
+    it('shows the published course in the public catalog', () => {
+        cy.visit('/courses');
+        cy.contains(title, { timeout: 10000 }).should('be.visible');
+    });
+
+    it('updates the course and confirms the change was persisted', () => {
+        const updatedDescription = `Updated by Cypress ${Date.now()}`;
+        cy.request({
+            method: 'PATCH',
+            url: `${api}/courses/${createdCourse.slug}`,
+            headers: authHeaders(),
+            body: { description: updatedDescription }
+        }).then(({ status, body }) => {
+            expect(status).to.eq(200);
+            expect(body.description).to.eq(updatedDescription);
+        });
+
         cy.request({
             method: 'GET',
-            url: `${api}/courses`,
-            headers: {
-                Authorization: `Bearer ${Cypress.env('token')}`
-            }
-        }).then(res => {
-            const found = res.body.find(c => c.title === courseData.title)
-            expect(found).to.exist
-        })
-    })
+            url: `${api}/courses/${createdCourse.slug}`
+        }).then(({ status, body }) => {
+            expect(status).to.eq(200);
+            expect(body.description).to.eq(updatedDescription);
+        });
+    });
 
-    it('deletes the course via API (backend cleanup)', () => {
+    it('deletes the course via API', () => {
         cy.request({
-            method: 'GET',
-            url: `${api}/courses`,
-            headers: { Authorization: `Bearer ${Cypress.env('token')}` }
-        }).then(res => {
-            const target = res.body.find(c => c.title === courseData.title)
-            if (target?._id) {
-                cy.request({
-                    method: 'DELETE',
-                    url: `${api}/courses/${target._id}`,
-                    headers: { Authorization: `Bearer ${Cypress.env('token')}` }
-                })
-                    .its('status')
-                    .should('eq', 200)
-            }
-        })
-    })
-})
+            method: 'DELETE',
+            url: `${api}/courses/${createdCourse._id}`,
+            headers: authHeaders()
+        }).then(({ status }) => {
+            expect(status).to.eq(200);
+            createdCourse = null;
+        });
+    });
+});

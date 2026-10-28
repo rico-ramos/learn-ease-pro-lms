@@ -1,11 +1,15 @@
 import slugify from 'slugify';
 import Course from '../models/Course.js';
+import Lesson from '../models/Lesson.js';
+import Enrollment from '../models/Enrollment.js';
+import Feedback from '../models/Feedback.js';
+import Progress from '../models/Progress.js';
 
 // GET /courses?q=react
 export const list = async (req, res, next) => {
   try {
     const q = req.query.q;
-    const filter = q ? { title: new RegExp(q, 'i') } : {};
+    const filter = { isPublished: true, ...(q ? { title: new RegExp(q, 'i') } : {}) };
     const items = await Course.find(filter)
       .select('title slug description category level ratingAvg ratingCount isPublished')
       .limit(100);
@@ -19,6 +23,16 @@ export const getOne = async (req, res, next) => {
     const course = await Course.findOne({ slug: req.params.slug })
       .populate('createdBy', 'name');
     if (!course) return res.status(404).json({ message: 'Not found' });
+
+    if (!course.isPublished) {
+      const isOwner = req.user?.role === 'faculty' &&
+        (course.createdBy?._id ?? course.createdBy)?.toString() === req.user.id;
+      const isAdmin = req.user?.role === 'admin';
+      if (!isOwner && !isAdmin) {
+        return res.status(404).json({ message: 'Not found' });
+      }
+    }
+
     res.json(course);
   } catch (e) { next(e); }
 };
@@ -70,18 +84,25 @@ export const update = async (req, res, next) => {
 };
 
 // DELETE /courses/:id  (faculty owner or admin)
-export const deleteCourse = async (req, res) => {
+export const deleteCourse = async (req, res, next) => {
   try {
-    const course = await Course.findByIdAndDelete(req.params.id)
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' })
-    }
-    res.json({ message: 'Course deleted successfully' })
-  } catch (err) {
-    res.status(500).json({ message: 'Error deleting course', error: err.message })
-  }
-}
+    const course = await Course.findById(req.params.id);
+    if (!course) return res.status(404).json({ message: 'Course not found' });
 
+    const isOwner = course.createdBy.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+    if (!isOwner && !isAdmin) return res.status(403).json({ message: 'Forbidden' });
+
+    // Remove dependent documents before removing the parent course.
+    // This is not atomic; production deployments should use a MongoDB transaction.
+    await Progress.deleteMany({ course: course._id });
+    await Feedback.deleteMany({ course: course._id });
+    await Enrollment.deleteMany({ course: course._id });
+    await Lesson.deleteMany({ course: course._id });
+    await course.deleteOne();
+    res.json({ message: 'Course deleted successfully' });
+  } catch (err) { next(err); }
+};
 
 
 // GET /courses/mine  (faculty/admin)

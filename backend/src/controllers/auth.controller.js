@@ -11,6 +11,12 @@ export const register = async (req, res, next) => {
       return res.status(400).json({ message: 'Name, email, and password are required' });
     }
 
+    // Public sign-up is limited to learners and faculty; admins must be provisioned separately.
+    const registrationRole = role === undefined ? 'learner' : role;
+    if (!['learner', 'faculty'].includes(registrationRole)) {
+      return res.status(400).json({ message: 'Invalid registration role' });
+    }
+
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: 'Email already in use' });
 
@@ -19,7 +25,7 @@ export const register = async (req, res, next) => {
       name,
       email,
       passwordHash,
-      role: role || 'learner',
+      role: registrationRole,
     });
 
     return res.status(201).json({ id: user._id, name: user.name, role: user.role });

@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Courses } from '../../api'
+import { useToast } from '../../components/ToastProvider.jsx'
 
 export default function Faculty() {
     const [mine, setMine] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
+    const [deletingId, setDeletingId] = useState(null)
+    const { push } = useToast()
 
     useEffect(() => {
         let ignore = false
@@ -23,6 +26,21 @@ export default function Faculty() {
         load()
         return () => { ignore = true }
     }, [])
+
+    async function handleDelete(course) {
+        if (!window.confirm(`Delete "${course.title}" and all its lessons, enrollments, feedback, and progress? This cannot be undone.`)) return
+        setDeletingId(course._id)
+        setError('')
+        try {
+            await Courses.remove(course._id)
+            setMine(prev => prev.filter(item => item._id !== course._id))
+            push('Course deleted', 'success')
+        } catch (err) {
+            setError(err?.response?.data?.message || 'Failed to delete course')
+        } finally {
+            setDeletingId(null)
+        }
+    }
 
     return (
         <div className="p-6">
@@ -54,12 +72,22 @@ export default function Faculty() {
                                                 {c.category} · {c.level} {c.isPublished ? '· Published' : '· Draft'}
                                             </div>
                                         </div>
-                                        <Link
-                                            to={`/faculty/edit/${c.slug}`}
-                                            className="text-sm px-2 py-1 rounded bg-gray-200 hover:bg-gray-300"
-                                        >
-                                            Edit
-                                        </Link>
+                                        <div className="flex gap-2">
+                                            <Link
+                                                to={`/faculty/edit/${c.slug}`}
+                                                className="text-sm px-2 py-1 rounded bg-gray-200 hover:bg-gray-300"
+                                            >
+                                                Edit
+                                            </Link>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDelete(c)}
+                                                disabled={deletingId !== null}
+                                                className="text-sm px-2 py-1 rounded bg-red-600 text-white disabled:opacity-50"
+                                            >
+                                                {deletingId === c._id ? 'Deleting…' : 'Delete'}
+                                            </button>
+                                        </div>
                                     </div>
                                     <p className="text-sm text-gray-700 mt-2 line-clamp-3">{c.description}</p>
                                 </div>

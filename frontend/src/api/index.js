@@ -34,6 +34,10 @@ export const Courses = {
     const { data } = await api.post('/courses', { title, description, category, level })
     return data
   },
+  async remove(id) {
+    const { data } = await api.delete(`/courses/${encodeURIComponent(id)}`)
+    return data
+  },
   async update(slug, { title, description, category, level, isPublished }) {
     const { data } = await api.patch(`/courses/${slug}`, { title, description, category, level, isPublished })
     return data

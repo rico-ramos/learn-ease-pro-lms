@@ -1,9 +1,12 @@
 {
   "scripts": {
+    "dev": "npm --prefix frontend run dev --",
+    "build": "npm --prefix frontend run build --",
     "test:e2e": "cypress run",
     "test:e2e:open": "cypress open"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.2",
     "cypress": "^15.5.0"
   }
 }
